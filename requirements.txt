@@ -1,0 +1,10 @@
+# Core gates (run_all_gates.py and every C*/S*/T5 script): NumPy only.
+numpy>=1.24
+
+# Optional -- only for phase3_real/phase3_scale_experiment.py, which runs inside the
+# authors' `approxml` package (obtain separately from github.com/Shermjj/Direct_FSM):
+# jax
+# jaxlib
+# optax
+# equinox
+# jaxtyping

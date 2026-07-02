@@ -1,0 +1,15 @@
+=== Ku-SBI-PMM (Paper 5) -- Unified Verification Report ===
+seed 2026 | Kunchenko poly/PATP score surrogate for simulation-based FSM
+
+[PASS] G1-G7 synthetic (mean+variance, PATP sweep): 7/7 checks passed
+[PASS] T5 currency identity g=||projS||^2/I (moment-free, no score): worst |g_hat-g_truth| = 0.0401 < 0.05
+[PASS] C2/C3/C6/C7 ablations: ridge cond-drop, m-sweep g_m up + cond up, closed-vs-sim g_m(alpha), QR g-invariance
+[PASS] C4 finite-budget rate: bias O(sigma^2) + var kappa/(m sigma^2) => sigma* ~ (mT)^-1/6
+[PASS] C5 multi-parameter block g_m: {x}->diag(1,0), {x,x^2}->I_2 (even term lifts scale block, cross-info 0)
+[PASS] P-B authors' FSM core, variance: linear v-err 2.54 (FAILS) vs poly2 0.70 -- structural contrast
+[PASS] P-Bt heavy-tail t(6) scale, their code: linear err 2.53 (FAILS), poly2 0.71, patp@0.6 0.65 (fractional best)
+[info] P-C alpha-sweep via their fit: Gauss a*=1.0, t(4) a*=0.0 (+91% score-recovery over x^2)
+[TODO] COSMO sigma_8: needs GPU + jax_cosmo/sbi_lens + data (ready patch: phase3_real/cosmo_patch.md)
+
+=== RUNNABLE GATES: ALL PASS ===
+(cosmo sigma_8 is the only pending gate; theory phase-1 = manuscript.)
