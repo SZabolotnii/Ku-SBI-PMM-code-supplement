@@ -1,0 +1,21 @@
+{
+  "n_pairs": 20,
+  "COSMO_1_direction": {
+    "mean_paired_delta": 0.003367862810594785,
+    "pass": true
+  },
+  "COSMO_2_strength": {
+    "t_stat": 2.414808845019815,
+    "threshold": 1.7,
+    "frac_positive": 0.75,
+    "pass": true
+  },
+  "patp_info": {
+    "patp05": {
+      "n_pairs": 20,
+      "mean_delta_vs_poly2": 4.1763864976807065e-05,
+      "sd": 0.004317340224055843
+    }
+  },
+  "all_pass": true
+}

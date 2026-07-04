@@ -31,10 +31,10 @@ plt.plot(alphas, gG, '-',  color='C0', lw=2, label='Gaussian')
 plt.plot(alphas, gT, '--', color='C3', lw=2, label=r'Student-$t_8$ (heavy tail)')
 plt.scatter([aG], [gG.max()], color='C0', zorder=5)
 plt.scatter([aT], [gT.max()], color='C3', zorder=5)
-plt.annotate(r'$\alpha^\star=%.1f$' % aG, (aG, gG.max()), textcoords='offset points',
-             xytext=(-6, -14), color='C0', ha='right')
-plt.annotate(r'$\alpha^\star\approx%.1f$' % aT, (aT, gT.max()), textcoords='offset points',
-             xytext=(4, -12), color='C3')
+plt.annotate(r'$\alpha^\star=%.2f$' % aG, (aG, gG.max()), textcoords='offset points',
+             xytext=(-6, -18), color='C0', ha='right', fontsize=9)
+plt.annotate(r'$\alpha^\star\approx%.2f$' % aT, (aT, gT.max()), textcoords='offset points',
+             xytext=(-6, 8), color='C3', ha='right', fontsize=9)
 plt.xlabel(r'transition parameter $\alpha$  ($0$: fractional $\to$ $1$: integer)')
 plt.ylabel(r'captured Fisher $g_m(\alpha)$')
 plt.ylim(0.55, 1.02); plt.xlim(0, 1)

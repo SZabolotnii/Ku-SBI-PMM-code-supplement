@@ -34,9 +34,26 @@ The residual downward bias in B/B-t is the documented Gaussian-smoothing + stron
 (λ=1.0) effect; the **structural contrast** (linear fails, polynomial/PATP recover) is the
 point, and it is stable across seeds and jax versions.
 
-## Cosmological σ₈
+## Cosmological σ₈ — run and PASSED (CPU-only, Apple M3 Max, 2026-07-03)
 
-Not runnable without a GPU and the cosmological stack (`jax_cosmo`, `sbi_lens`) plus
-non-redistributable data. `cosmo_patch.md` contains the ready one-line patch to the authors'
-`cosmo_sm_n_obs.py` for a machine with the full stack; σ₈ is an amplitude (scale) parameter,
-so the even PATP features apply.
+The full LSST Y10 weak-lensing benchmark was run with the `cosmo_m3max/` package (driver,
+environment probe, data fetcher, pre-registered analysis — see its `README_UA.md`): 3 arms
+(linear / poly2 / patp05) × 20 paired runs on common seeds `PRNGKey(2026000+r)`,
+n_obs = 250, the authors' hyperparameters unchanged, CPU-only jax (no GPU needed;
+8.1 h wall-clock total). The three data artefacts are third-party
+(`DifferentiableUniverseInitiative/sbi_lens`) and are **not redistributed** here — fetch
+them with `cosmo_m3max/fetch_data.sh`; their sha256 hashes are recorded in
+`cosmo_m3max/results/` provenance and the repository history.
+
+**Pre-registered verdict (thresholds fixed before any full run): PASS.**
+COSMO-1 (direction): mean paired Δ|σ̂₈−σ₈| (linear−poly2) = **+0.0034 > 0**.
+COSMO-2 (strength): one-sided paired **t = 2.41 ≥ 1.70** (75% of pairs positive).
+σ₈ error: linear 0.0130 → poly2 **0.0096 (−26%)**; the aggregate six-parameter MSE is
+unchanged (0.449 both arms) — the even feature buys amplitude accuracy at no cost
+elsewhere. patp05 matches poly2 (Δ = +0.0000 ± 0.0043): the learned compressor output is
+close enough to Gaussian that the integer basis is already optimal, so the gain comes from
+**parity**, not tail adaptation. Per-run records and the verdict live in
+`cosmo_m3max/results/*.json`; `cosmo_m3max/analyze_results.py` recomputes the verdict.
+
+`cosmo_patch.md` (the original one-line patch to the authors' `cosmo_sm_n_obs.py`) is kept
+for reference; the full protocol is the `cosmo_m3max/` package.

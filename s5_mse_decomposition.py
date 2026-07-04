@@ -4,8 +4,8 @@ FSM-PATP score-surrogate estimator.  Claim:
 
     MSE(theta_hat) ~=  1/(N I g_m(alpha))        [approximation -- Godambe/LSU, EXACT: ARE=g_m]
                      + [B(alpha) sigma^2]^2       [smoothing bias, O(sigma^4)]
-                     + kappa(alpha)/(m sigma^2 T) [MC variance of the surrogate]
-    =>  sigma* ~ (mT)^(-1/6),  excess MSE ~ (mT)^(-2/3).
+                     + kappa(alpha)/(J sigma^2 T) [MC variance of the surrogate]
+    =>  sigma* ~ (JT)^(-1/6),  excess MSE ~ (JT)^(-2/3).
 
 We verify the three predicted scalings on the Gaussian variance model x~N(0,theta)
 (theta = variance), where everything is analytic:
@@ -25,16 +25,16 @@ def phi(x):  return np.stack([np.ones_like(x), x, x**2], axis=-1)   # poly2
 def sample_var(theta, size):              # x ~ N(0, theta)
     return RNG.normal(0.0, np.sqrt(max(theta, 1e-9)), size)
 
-def fsm_fit(theta_t, sigma, m, n, lamb=1e-8):
+def fsm_fit(theta_t, sigma, J, n, lamb=1e-8):
     """closed-form FSM (Eq.5), poly2, scalar theta=variance. Returns W_hat (3,)."""
-    thetas = np.abs(RNG.normal(theta_t, sigma, m)) + 1e-9
-    g = -(thetas - theta_t) / sigma**2
-    Z = RNG.standard_normal((m, n))
+    thetas = np.abs(RNG.normal(theta_t, sigma, J)) + 1e-9
+    u = -(thetas - theta_t) / sigma**2
+    Z = RNG.standard_normal((J, n))
     X = (np.sqrt(thetas)[:, None] * Z).ravel()
     P = phi(X)                                          # (m*n, 3)
-    gvec = np.repeat(g, n)
+    uvec = np.repeat(u, n)
     A = P.T @ P + lamb * np.eye(3)
-    b = P.T @ gvec
+    b = P.T @ uvec
     return -np.linalg.solve(A, b)                       # W_hat
 
 def loglog_slope(xs, ys):
@@ -43,10 +43,10 @@ def loglog_slope(xs, ys):
 # ---- check (i): Var(W_hat[2]) ~ 1/sigma^2  (slope -2) --------------------------------
 def check_i():
     sigmas = np.array([0.05, 0.075, 0.10, 0.15, 0.20, 0.30])
-    m, n, R = 400, 40, 400
+    J, n, R = 400, 40, 400
     variances = []
     for s in sigmas:
-        w2 = np.array([fsm_fit(THETA, s, m, n)[2] for _ in range(R)])
+        w2 = np.array([fsm_fit(THETA, s, J, n)[2] for _ in range(R)])
         variances.append(w2.var())
     slope = loglog_slope(sigmas, variances)
     return sigmas, np.array(variances), slope
@@ -97,4 +97,6 @@ if __name__ == "__main__":
     print("       -- established (LSU gate T2: |g_analyt-g_empir(ARE)|<0.05); g_m validated")
     print("          moment-free in E5.  poly2/Gaussian-var: g_m=1 => Var(theta_hat)->1/(N I).")
     print("\n  KEY (numerically validated): MC variance ~ 1/sigma^2  (slope -1.90).")
-    print("  With bias ~ sigma^2 (derived): sigma* ~ (mT)^(-1/6),  excess MSE ~ (mT)^(-2/3).")
+    ok = abs(sl + 2) < 0.3 and coef > 0
+    print("  With bias ~ sigma^2 (derived): sigma* ~ (JT)^(-1/6),  excess MSE ~ (JT)^(-2/3).")
+    print(f"\n  => S5-MSE {'PASS' if ok else 'FAIL'}  (MC variance slope {sl:+.2f}, derived bias constant {coef:.3f})")

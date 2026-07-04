@@ -1,0 +1,11 @@
+# COSMO gate -- Python deps for the M3 Max (arm64) CPU run.
+# Tier 1: try current versions first (fast path). If check_env.py fails on
+# haiku/tfp/jax_cosmo interop, fall back to the pinned Tier-2 set in README_UA.md §4.
+numpy
+jax
+jaxlib
+optax
+dm-haiku
+jax-cosmo
+tensorflow-probability
+scikit-learn

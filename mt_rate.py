@@ -1,10 +1,10 @@
 r"""
-C4 -- the finite-budget rule  sigma* ~ (mT)^{-1/6}   (reviewer Q7).
+C4 -- the finite-budget rule  sigma* ~ (JT)^{-1/6}   (reviewer Q7).
 
 Section 5 predicts, for the surrogate coefficient estimator,
-    MSE(sigma) = [B sigma^2]^2  +  kappa/(m sigma^2 T)
+    MSE(sigma) = [B sigma^2]^2  +  kappa/(J sigma^2 T)
                  \___bias^2___/    \____MC variance____/
-whose minimiser is  sigma* = (kappa/(2 B^2 mT))^{1/6} ~ (mT)^{-1/6}.
+whose minimiser is  sigma* = (kappa/(2 B^2 JT))^{1/6} ~ (JT)^{-1/6}.
 
 Section 7 validated only the sigma-dependence of the variance term.  Here we measure the
 two facts the rule actually needs, each independently and non-circularly, on a NON-Gaussian
@@ -12,11 +12,11 @@ scale family (contaminated normal -- the Gaussian-scale special case has B=0):
 
   (A) SMOOTHING BIAS is O(sigma^2).  Measured NOISE-FREE from the population-smoothed
       coefficient W_pop(sigma) (huge single sample, no per-rep MC): |W_pop(sigma)-W*| ~ sigma^2.
-  (B) MC VARIANCE is kappa/(m sigma^2).  Measured over R reps on an (m,sigma) grid:
-      Var(W_hat) * m * sigma^2 = kappa is constant.
+  (B) MC VARIANCE is kappa/(J sigma^2).  Measured over R reps on a (J,sigma) grid:
+      Var(W_hat) * J * sigma^2 = kappa is constant.
 
-Given B (from A) and kappa (from B), sigma*(m) = (kappa/(2 B^2 m))^{1/6} ~ m^{-1/6}; with
-the standard Polyak-Ruppert 1/T averaging over T steps, m -> mT, giving sigma* ~ (mT)^{-1/6}.
+Given B (from A) and kappa (from B), sigma*(J) = (kappa/(2 B^2 J))^{1/6} ~ J^{-1/6}; with
+the standard Polyak-Ruppert 1/T averaging over T steps, J -> JT, giving sigma* ~ (JT)^{-1/6}.
 The -1/6 is the algebraic consequence of the two MEASURED scalings, not an input.
 
 Pure numpy, seed 2026, self-checking.  Prints a single MT-RATE PASS/FAIL line.
@@ -56,10 +56,10 @@ def w_star(N=40_000_000):
     return float((f * S).mean() / (f * f).mean())
 
 
-def w_hat(theta_t, sigma, m, n):
-    """IBP (no score) estimate of the x^2 coefficient at proposal scale sigma, budget m*n."""
-    thetas = np.abs(RNG.normal(theta_t, sigma, m)) + 1e-9
-    x = np.sqrt(thetas)[:, None] * draw_u((m, n))          # scale target: x = sqrt(theta) u
+def w_hat(theta_t, sigma, J, n):
+    """IBP (no score) estimate of the x^2 coefficient at proposal scale sigma, budget J*n."""
+    thetas = np.abs(RNG.normal(theta_t, sigma, J)) + 1e-9
+    x = np.sqrt(thetas)[:, None] * draw_u((J, n))          # scale target: x = sqrt(theta) u
     th_rep = np.repeat(thetas, n)
     phi = (x ** 2).ravel(); phi = phi - phi.mean()
     b = float((phi * (th_rep - theta_t)).mean()) / sigma ** 2
@@ -74,7 +74,7 @@ def slope(xs, ys):
 # ======================================================================================
 if __name__ == "__main__":
     print("=" * 78)
-    print("C4  -  finite-budget rule  sigma* ~ (mT)^{-1/6}   (contaminated-normal scale)")
+    print("C4  -  finite-budget rule  sigma* ~ (JT)^{-1/6}   (contaminated-normal scale)")
     print("=" * 78)
     theta_t = 1.0
     Wst = w_star()
@@ -91,34 +91,34 @@ if __name__ == "__main__":
     print(f"     log-log slope = {b_slope:+.2f}   [{'OK' if abs(b_slope - 2) < 0.5 else 'OFF'}]"
           f"   =>  B = {B:.3f}")
 
-    # --- (B) MC variance kappa/(m sigma^2): Var * m * sigma^2 = kappa (constant) ---------
-    ms = [300, 600, 1200, 2400]
+    # --- (B) MC variance kappa/(J sigma^2): Var * J * sigma^2 = kappa (constant) ---------
+    Js = [300, 600, 1200, 2400]
     sig_v = [0.07, 0.10, 0.14]
     n, R = 60, 300
     kappas = []
-    print("\n (B) MC variance  Var(W_hat) * m * sigma^2 = kappa  [predict constant]")
-    print(f"    {'m':>6} " + " ".join(f"s={s:<5}" for s in sig_v))
-    for m in ms:
+    print("\n (B) MC variance  Var(W_hat) * J * sigma^2 = kappa  [predict constant]")
+    print(f"    {'J':>6} " + " ".join(f"s={s:<5}" for s in sig_v))
+    for J in Js:
         row = []
         for s in sig_v:
-            w = np.array([w_hat(theta_t, s, m, n) for _ in range(R)])
-            k = float(w.var() * m * s ** 2)
+            w = np.array([w_hat(theta_t, s, J, n) for _ in range(R)])
+            k = float(w.var() * J * s ** 2)
             row.append(k); kappas.append(k)
-        print(f"    {m:6d} " + " ".join(f"{k:7.2e}" for k in row))
+        print(f"    {J:6d} " + " ".join(f"{k:7.2e}" for k in row))
     kappas = np.array(kappas)
     kappa = float(kappas.mean()); k_cv = float(kappas.std() / kappas.mean())
     print(f"     kappa = {kappa:.3e}   CV(kappa) across (m,sigma) = {k_cv:.2f}"
           f"   [{'OK' if k_cv < 0.35 else 'OFF'}]")
 
-    # --- (=>) sigma*(m) = (kappa/(2 B^2 m))^{1/6} ~ m^{-1/6} -----------------------------
-    sstar = np.array([(kappa / (2 * B ** 2 * m)) ** (1 / 6) for m in ms])
-    s_slope = slope(ms, sstar)
-    print("\n (=>) assembled rule  sigma*(m) = (kappa/2B^2 m)^{1/6}   [predict slope -1/6=-0.167]")
-    print("     m      :", " ".join(f"{m:8d}" for m in ms))
+    # --- (=>) sigma*(J) = (kappa/(2 B^2 J))^{1/6} ~ J^{-1/6} -----------------------------
+    sstar = np.array([(kappa / (2 * B ** 2 * J)) ** (1 / 6) for J in Js])
+    s_slope = slope(Js, sstar)
+    print("\n (=>) assembled rule  sigma*(J) = (kappa/2B^2 J)^{1/6}   [predict slope -1/6=-0.167]")
+    print("     J      :", " ".join(f"{J:8d}" for J in Js))
     print("     sigma* :", " ".join(f"{x:8.4f}" for x in sstar))
     print(f"     log-log slope = {s_slope:+.3f}   [{'OK' if abs(s_slope + 1 / 6) < 0.02 else 'OFF'}]")
 
     ok = abs(b_slope - 2) < 0.5 and k_cv < 0.35 and abs(s_slope + 1 / 6) < 0.02
     print("\n" + "=" * 78)
-    print(f"  => MT-RATE {'PASS' if ok else 'FAIL'}  (bias O(sigma^2), var kappa/(m sigma^2), "
-          f"sigma* ~ (mT)^-1/6)")
+    print(f"  => MT-RATE {'PASS' if ok else 'FAIL'}  (bias O(sigma^2), var kappa/(J sigma^2), "
+          f"sigma* ~ (JT)^-1/6)")
